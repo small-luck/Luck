@@ -61,7 +61,7 @@ public:
     const std::string& getThreadName() const { return m_threadName; }
 
     /* 返回日志内容 */
-    std::string getConteng() const { return m_ss.str(); }
+    std::string getContent() const { return m_ss.str(); }
 
     /* 返回日志器 */
     std::shared_ptr<Logger> getLogger() const { return m_logger; }
@@ -136,7 +136,7 @@ public:
 
      /* 返回格式化日志文本 */
      std::string& format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
-     std::ostream& format(std::ostream& ofs, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
+     std::ostream& format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
 
 public:
     /* 日志内容项格式化 */

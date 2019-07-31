@@ -122,47 +122,92 @@ bool FileLogAppender::reopen()
 
 /* 返回消息类 */
 class MessageFormatItem : public LogFormatter::FormatItem {
-
+public:
+    MessageFormatItem(const std::string& str = "") {}
+    void format(std::ostream & os, std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event) {
+        os << event.getContent();
+    }
 };
 
 /* 返回日志级别类 */
 class LevelFormatItem : public LogFormatter::FormatItem {
-
+public:
+    LevelFormatItem(const std::string& str = "" ) {}
+    void format(std::ostream & os, std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event) {
+        os << LogLevel::to_string(level);
+    }
 };
 
 /* 返回从程序开始到现在的耗时类 */
 class ElapseFormatItem : public LogFormatter::FormatItem {
-
+public:
+    ElapseFormatItem(const std:string& str = "") {}
+    void format(std::ostream & os, std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event) {
+        os << event->getElapse();
+    }
 };
 
 /* 返回日志名称类 */
 class NameFormatItem : public LogFormatter::FormatItem {
-
+public:
+    NameFormatItem(const std::string& str = "") {}
+    void format(std::ostream & os, std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event) {
+        os << event->getLogger()->getName();
+    }
 };
 
 /* 返回线程ID类 */
 class ThreadIdFormatItem : public LogFormatter::FormatItem {
-
+public:
+    ThreadIdFormatItem(const std::string& str = "") {}
+    void format(std::ostream & os, std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event) {
+        os << event->getThreadId();
+    }
 };
 
 /* 返回协程ID类 */
 class FiberIdFormatItem : public LogFormatter::FormatItem {
-
+public:
+    FiberIdFormatItem(const std::string& str = "") {}
+    void format(std::ostream & os, std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event) {
+        os << event->getFiberId();
+    }
 };
 
 /* 返回线程名称类 */
 class ThreadNameFormatItem : public LogFormatter::FormatItem {
-
+public:
+    ThreadNameFormatItem(const std::string& str = "") {}
+    void format(std::ostream & os, std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event) {
+        os << event->getThreadName();
+    }
 };
 
 /* 返回时间戳类 */
 class DateTimeFormatItem : public LogFormatter::FormatItem {
+public:
+    DateTimeFormatItem(const std::string& format) : m_dateformat(format) {
+        if (m_dateformat.empty()) {
+            m_dateformat = "%Y-%m-%d %H-%M:%S";
+        }
+    }
 
+    void format(std::ostream & os, std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event) {
+        struct tm tm;
+        time_t time = event->getTime();
+        localtime_r(&time, &tm);
+        char buf[64];
+        strftime(buf, sizeof(buf), m_dateformat.c_str(), &tm);
+        os << buf;
+    }
+
+private:
+    std::string m_dateformat;
 };
 
 /* 返回文件名类 */
 class FileNameFormatItem : public LogFormatter::FormatItem {
-
+public:
 };
 
 /* 返回行号类 */
