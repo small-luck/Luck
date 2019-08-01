@@ -1,0 +1,4 @@
+/mnt/study/Luck/build/CMakeFiles/rebuild_cache.dir
+/mnt/study/Luck/build/CMakeFiles/edit_cache.dir
+/mnt/study/Luck/build/CMakeFiles/test.dir
+/mnt/study/Luck/build/CMakeFiles/Luck.dir

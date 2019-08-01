@@ -1,9 +1,22 @@
+/*
+    @file   log.h
+    @brief  日志模块封装  
+    @author perry.liu
+    @date   2019-08-01
+*/
+
 #ifndef __LOG_H__
 #define __LOG_H__
 
 #include <list>
 #include <stdint.h>
 #include <memory>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <vector>
+#include <stdarg.h>
+#include <map>
 
 namespace Luck{
 
@@ -22,7 +35,7 @@ public:
     };
 
     /*将日志级别转换为字符串*/
-    static const lc_s8_t *to_string(LogLevel::Level level);
+    static const char* to_string(LogLevel::Level level);
 
     /*将字符串转换为日志级别*/
     static LogLevel::Level from_string(const std::string& str);
@@ -75,9 +88,6 @@ public:
     /* 格式化写入日志内容 */
     void format(const char* fmt, ...);
 
-    /* 格式化写入日志内容 */
-    void format(const char* fmt, va_list al);
-
 private:
     /* 文件名 */
     const char* m_file = nullptr;
@@ -89,7 +99,7 @@ private:
     uint32_t m_elapse = 0;
 
     /* 线程ID */
-    uint32_5t m_threadId = 0;
+    uint32_t m_threadId = 0;
 
     /* 协程ID */
     uint32_t m_fiberId = 0;
@@ -112,7 +122,7 @@ private:
 
 class LogFormatter {
 public:
-    typedef std::shared_ptr<Formatter> ptr;
+    typedef std::shared_ptr<LogFormatter> ptr;
 
     /*
      *  构造函数
@@ -135,7 +145,7 @@ public:
      LogFormatter(const std::string& pattern);
 
      /* 返回格式化日志文本 */
-     std::string& format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
+     std::string format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
      std::ostream& format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
 
 public:
@@ -174,7 +184,7 @@ private:
 
 class LogAppender {
 public:
-    typedef std::shared_ptr<Appender> ptr;
+    typedef std::shared_ptr<LogAppender> ptr;
 
     /* Appender会有派生类，所以需要使用虚析构函数 */
     virtual ~LogAppender() {}
@@ -264,13 +274,13 @@ public:
 
 private:
     /* 支持一个loger输出到不同的目的地的日志输出器集合 */
-    std::list<Appender::ptr> m_appenders; 
-
+    std::list<LogAppender::ptr> m_appenders; 
+    
+    /* 日志名称 */
+    std::string m_name;
+    
     /* 日志级别 */
     LogLevel::Level m_level;
-
-    /* 日志名称 */
-    std::string m_name; 
 
     /* 日志格式器 */
     LogFormatter::ptr m_formatter; 

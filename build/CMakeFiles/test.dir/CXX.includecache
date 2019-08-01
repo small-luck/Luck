@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/study/Luck/src/utils/log.h
+list
+-
+stdint.h
+-
+memory
+-
+string
+-
+sstream
+-
+fstream
+-
+vector
+-
+stdarg.h
+-
+map
+-
+
+/mnt/study/Luck/test/test_log.cpp
+iostream
+-
+time.h
+-
+stdint.h
+-
+../src/utils/log.h
+/mnt/study/Luck/src/utils/log.h
+
