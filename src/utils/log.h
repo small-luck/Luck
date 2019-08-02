@@ -5,8 +5,8 @@
     @date   2019-08-01
 */
 
-#ifndef __LOG_H__
-#define __LOG_H__
+#ifndef __LUCK_LOG_H__
+#define __LUCK_LOG_H__
 
 #include <list>
 #include <stdint.h>
@@ -17,6 +17,54 @@
 #include <vector>
 #include <stdarg.h>
 #include <map>
+#include <time.h>
+#include "utils.h"
+
+/* 使用流式方式将日志级别为level的日志写入logger中 */
+#define LUCK_LOG_PRINT(logger, level) \
+    if (logger->getLevel() <= level)   \
+        Luck::LogEventWrap(Luck::LogEvent::ptr(new Luck::LogEvent(logger, level, \
+                    __FILE__, __LINE__, 0, Luck::GetThreadId(), \
+                    Luck::GetFiberId(), time(0), Luck::GetThreadName()))).getSS()
+
+/* 使用流式方式将DEBUG日志写入logger中 */
+#define LUCK_LOG_DEBUG(logger)      LUCK_LOG_PRINT(logger, Luck::LogLevel::DEBUG)
+
+/* 使用流式方式将INFO日志写入logger中 */
+#define LUCK_LOG_INFO(logger)       LUCK_LOG_PRINT(logger, Luck::LogLevel::INFO)
+
+/* 使用流式方式将WARNING日志写入logger中 */
+#define LUCK_LOG_WARNING(logger)    LUCK_LOG_PRINT(logger, Luck::LogLevel::WARNING)
+
+/* 使用流式方式将ERROR日志写入logger中 */
+#define LUCK_LOG_ERROR(logger)      LUCK_LOG_PRINT(logger, Luck::LogLevel::ERROR)
+
+/* 使用流式方式将FATAL日志写入logger中 */
+#define LUCK_LOG_FATAL(logger)      LUCK_LOG_PRINT(logger, Luck::LogLevel::FATAL)
+
+/* 使用格式化方式将日志级别为level的日志写入logger中 */
+#define LUCK_LOG_FMT_PRINT(logger, level, fmt, ...) \
+    if (logger->getLevel() <= level) \
+        Luck::LogEventWrap(Luck::LogEvent::ptr(new Luck::LogEvent(logger, level, \
+                    __FILE__, __LINE__, 0, Luck::GetThreadId(), Luck::GetFiberId(), \
+                    time(0), Luck::GetThreadName()))).getEvent()->format(fmt, ##__VA_ARGS__)
+
+/* 使用格式化方式将DEBUG日志写入Logger中 */
+#define LUCK_LOG_FMT_DEBUG(logger, fmt, ...)        LUCK_LOG_FMT_PRINT(logger, Luck::LogLevel::DEBUG, fmt, ##__VA_ARGS__);
+
+/* 使用格式化方式将INFO日志写入Logger中 */
+#define LUCK_LOG_FMT_INFO(logger, fmt, ...)         LUCK_LOG_FMT_PRINT(logger, Luck::LogLevel::INFO, fmt, ##__VA_ARGS__);
+
+/* 使用格式化方式将WARNING日志写入Logger中 */
+#define LUCK_LOG_FMT_WARNING(logger, fmt, ...)      LUCK_LOG_FMT_PRINT(logger, Luck::LogLevel::WARNING, fmt, ##__VA_ARGS__);
+
+/* 使用格式化方式将ERROR日志写入Logger中 */
+#define LUCK_LOG_FMT_ERROR(logger, fmt, ...)        LUCK_LOG_FMT_PRINT(logger, Luck::LogLevel::ERROR, fmt, ##__VA_ARGS__);
+
+/* 使用格式化方式将FATAL日志写入Logger中 */
+#define LUCK_LOG_FMT_FATAL(logger, fmt, ...)        LUCK_LOG_FMT_PRINT(logger, Luck::LogLevel::FATAL, fmt, ##__VA_ARGS__);
+
+
 
 namespace Luck{
 
@@ -120,6 +168,23 @@ private:
     LogLevel::Level m_level;    
 };
 
+/* 日志事件包装器 */
+class LogEventWrap {
+public:
+    LogEventWrap(LogEvent::ptr event);
+    ~LogEventWrap();
+
+    /* 获取流 */
+    std::stringstream& getSS();
+
+    /* 获取日志事件 */
+    LogEvent::ptr getEvent() { return m_event; }
+
+private:
+    /* 日志事件 */
+    LogEvent::ptr m_event;
+};
+
 class LogFormatter {
 public:
     typedef std::shared_ptr<LogFormatter> ptr;
@@ -203,6 +268,9 @@ public:
 
     /* 获取日志级别 */
     LogLevel::Level getLevel() { return m_level; }
+
+    /* 是否有自己的日志格式器 */
+    bool hasFormmater() { return m_hasFormmter; }
     
 protected:
     /* 日志级别 */
@@ -215,6 +283,7 @@ protected:
     LogFormatter::ptr m_formatter;
 
 };
+
 
 /*
     日志器，包括一个日志格式器，一个logger root,N个Appenders
@@ -327,4 +396,4 @@ private:
 };
 
 }
-#endif // !__LOG_H__
+#endif /*__LUCK_LOG_H__*/

@@ -5,8 +5,9 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O0 -ggdb -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function")
 
 set(LIB_SRC
-   src/utils/log.cpp
-    )
+    src/utils/log.cpp
+    src/utils/utils.cpp
+   )
 
 #生成一个链接库
 add_library(Luck SHARED ${LIB_SRC})

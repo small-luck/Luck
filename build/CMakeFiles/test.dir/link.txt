@@ -1,1 +1,0 @@
-/usr/bin/c++   -rdynamic -O0 -ggdb -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function  -rdynamic CMakeFiles/test.dir/test/test_log.cpp.o  -o ../bin/test -Wl,-rpath,/mnt/study/Luck/lib ../lib/libLuck.so 

@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC  -rdynamic -O0 -ggdb -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function  -shared -Wl,-soname,libLuck.so -o ../lib/libLuck.so CMakeFiles/Luck.dir/src/utils/log.cpp.o 

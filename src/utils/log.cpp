@@ -1,10 +1,7 @@
 #include "log.h"
-#include <string>
 #include <iostream>
 #include <functional>
-#include <time.h>
 #include <string.h>
-#include <map>
 
 namespace Luck {
 
@@ -80,6 +77,22 @@ void LogEvent::format(const char * fmt, ...)
     va_end(list);
 }
 
+/* 构造函数 */
+LogEventWrap::LogEventWrap(LogEvent::ptr event) : m_event(event) {
+
+}
+
+/* 析构函数,利用对象离开作用域自动析构，自动执行log */
+LogEventWrap::~LogEventWrap() 
+{
+    m_event->getLogger()->log(m_event->getLevel(), m_event);
+}
+
+std::stringstream& LogEventWrap::getSS()
+{
+    return m_event->getSS();
+}
+
 /* 更改日志格式器 */
 void LogAppender::setFormatter(LogFormatter::ptr val)
 {
@@ -112,6 +125,11 @@ void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::p
             m_lasttime = now;
         }
 
+        if (!m_hasFormmter) {
+            setFormatter(logger->getFormatter());
+            m_hasFormmter = true;
+        }
+
         if (!m_formatter->format(m_filestream, logger, level, event)) {
             std::cout << "error" << std::endl;
         }
@@ -134,6 +152,10 @@ bool FileLogAppender::reopen()
 void StdoutLogAppender::log(std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event)
 {
     if (level >= m_level) {
+        if (!m_hasFormmter) {
+            setFormatter(logger->getFormatter());
+            m_hasFormmter = true;
+        }
         m_formatter->format(std::cout, logger, level, event);
     }
 }
@@ -291,6 +313,8 @@ void Logger::log(LogLevel::Level level, LogEvent::ptr event)
             }
         } else if (m_root) {
             m_root->log(level, event);
+        } else {
+            std::cout << "no appenders to log" << std::endl;
         }
     }
 }
@@ -397,7 +421,7 @@ void LogFormatter::init()
     std::string nstr;
     size_t i;
 
-    for (i = 0; i < m_pattern.size(); i++) {
+    for (i = 0; i < m_pattern.size(); ++i){
         if (m_pattern[i] != '%') {
             nstr.append(1, m_pattern[i]);
             continue;
@@ -412,13 +436,13 @@ void LogFormatter::init()
 
         size_t n = i + 1;
         int fmt_status = 0;
-        size_t fmt_begin = 0;
+        size_t fmt_begin = i;
 
         std::string str;    
         std::string fmt;
         while (n < m_pattern.size()) {
             if (!fmt_status && (!isalpha(m_pattern[n]) && m_pattern[n] != '{' && m_pattern[n] != '}')) {
-                //str = m_pattern.substr(i + 1, n - i - 1);
+                str = m_pattern.substr(i + 1, n - fmt_begin - 1);
                 break;
             }
             if (fmt_status == 0) {
@@ -434,7 +458,7 @@ void LogFormatter::init()
                     fmt = m_pattern.substr(fmt_begin + 1, n - fmt_begin - 1);
                     fmt_status = 0;
                     ++n;
-                    continue;
+                    break;
                 }
             }
 
