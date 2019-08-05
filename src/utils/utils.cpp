@@ -25,7 +25,6 @@ std::string& GetThreadName()
     return g_threadName;
 }
 
-<<<<<<< HEAD
 /* 获取当前时间，以20190905172700格式返回 */
 std::string& GetCurrentTime()
 {
@@ -41,11 +40,4 @@ std::string& GetCurrentTime()
            p.tm_hour, p.tm_min, p.tm_sec);
 
    return tformat;
-}
-
-
-=======
->>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d
-
-
 }

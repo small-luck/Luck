@@ -5,11 +5,8 @@
 
 namespace Luck {
 
-<<<<<<< HEAD
 #define NAX_LOGFILE_SIZE    (1024*1024)
 
-=======
->>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d
 const char* LogLevel::to_string(LogLevel::Level level) 
 {
     switch (level) {
@@ -179,8 +176,6 @@ bool FileLogAppender::reopen()
     }
 
     m_filestream.open(m_filename.c_str(), std::ios::app);
-
-<<<<<<< HEAD
     
 
     return true;
@@ -192,12 +187,6 @@ void FileLogAppender::addFileToList(FileLogInfo::ptr info)
 
 }
 
-
-=======
-    return true;
-}
-
->>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d
 /* 打印日志 */
 void StdoutLogAppender::log(std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event)
 {
@@ -423,7 +412,6 @@ void Logger::ClearAppenders()
     m_appenders.clear();
 }
 
-=======
 
 /* 写error日志 */
 void Logger::error(LogEvent::ptr event)
@@ -460,7 +448,6 @@ void Logger::ClearAppenders()
     m_appenders.clear();
 }
 
->>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d
 /* 设置日志格式器模板 */
 void Logger::setFormatter(const std::string& format)
 {
@@ -611,22 +598,8 @@ void LogFormatter::init()
     }
 }
 
-<<<<<<< HEAD
 
 
 }
 
 
-
-
-
-=======
-
-
-}
-
-
-
-
-
->>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d
