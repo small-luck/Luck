@@ -5,6 +5,11 @@
 
 namespace Luck {
 
+<<<<<<< HEAD
+#define NAX_LOGFILE_SIZE    (1024*1024)
+
+=======
+>>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d
 const char* LogLevel::to_string(LogLevel::Level level) 
 {
     switch (level) {
@@ -133,21 +138,66 @@ void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::p
         if (!m_formatter->format(m_filestream, logger, level, event)) {
             std::cout << "error" << std::endl;
         }
+        
+        m_filestream.seekp(0, m_filestream.end);
+        m_openfilesize = m_filestream.tellp();
+        std::cout << "filesize = " << m_openfilesize << std::endl;
+
+        if (m_openfilesize < NAX_LOGFILE_SIZE) {
+            return;            
+        }        
+
+        std::ofsream tmp_stream;
+        std::string new_path;
+        FileLogInfo::ptr info(new FileLogInfo(m_filename, m_firstopentime));
+        new_path = m_filename + "-" + m_firstopentime;
+
+        if (rename(m_filename.c_str(), new_path.c_str()) < 0) {
+            std::cout << "rename file failed, file = " << m_filename << std::endl;
+            return;
+        }
+        tmp_stream = m_filestream;
+
+        reopen();
+        m_openfilesize = 0;
+        m_isfirstopend = true;
+        
+        addFileToList(info);
+        
     }
 }
 
 /* 重新打开日志文件 */
 bool FileLogAppender::reopen()
-{
+{    
+    if (m_isfirstopend) {
+        m_firstopentime = GetCurrentTime();
+        
+    }
     if (m_filestream) {
         m_filestream.close();
     }
 
     m_filestream.open(m_filename.c_str(), std::ios::app);
 
+<<<<<<< HEAD
+    
+
     return true;
 }
 
+/* 将日志文件放入链表中 */
+void FileLogAppender::addFileToList(FileLogInfo::ptr info)
+{
+
+}
+
+
+=======
+    return true;
+}
+
+>>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d
 /* 打印日志 */
 void StdoutLogAppender::log(std::shared_ptr < Logger > logger, LogLevel::Level level, LogEvent::ptr event)
 {
@@ -336,6 +386,7 @@ void Logger::warning(LogEvent::ptr event)
 {
     log(LogLevel::WARNING, event);
 }
+<<<<<<< HEAD
 
 /* 写error日志 */
 void Logger::error(LogEvent::ptr event)
@@ -372,6 +423,44 @@ void Logger::ClearAppenders()
     m_appenders.clear();
 }
 
+=======
+
+/* 写error日志 */
+void Logger::error(LogEvent::ptr event)
+{
+    log(LogLevel::ERROR, event);
+}
+
+/* 写fatal日志 */
+void Logger::fatal(LogEvent::ptr event)
+{
+    log(LogLevel::FATAL, event);
+}
+
+/* 添加日志输出器 */
+void Logger::AddAppender(LogAppender::ptr appender)
+{
+    m_appenders.push_back(appender);
+}
+
+/* 删除一个日志输出器 */
+void Logger::DelAppender(LogAppender::ptr appender)
+{
+    for (auto it = m_appenders.begin(); it != m_appenders.end(); it++) {
+        if (*it == appender) {
+            m_appenders.erase(it);
+            break;
+        }
+    }
+}
+
+/* 清空日志输出器集合 */
+void Logger::ClearAppenders()
+{
+    m_appenders.clear();
+}
+
+>>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d
 /* 设置日志格式器模板 */
 void Logger::setFormatter(const std::string& format)
 {
@@ -522,6 +611,7 @@ void LogFormatter::init()
     }
 }
 
+<<<<<<< HEAD
 
 
 }
@@ -530,3 +620,13 @@ void LogFormatter::init()
 
 
 
+=======
+
+
+}
+
+
+
+
+
+>>>>>>> 89b4b96838d3ed428a5b78f9884e24180b63dc1d

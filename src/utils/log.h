@@ -369,6 +369,21 @@ public:
     
 };
 
+/* 文件日志相关信息 */
+class FileLogInfo {
+public:
+    typedef std::shared_ptr<FileLogInfo> ptr;
+
+    FileLogInfo(std::string& filename, std::string& createtime) : m_filename(filename), m_createtime(createtime) {}
+
+    std::string& getFilename() { return m_filename; }
+    std::string& getCreateTime() { return m_createtime; }
+
+private:
+    std::string m_filename;
+    std::string m_createtime;
+};
+
 
 /* Appender类的子类，输出到文件 */
 class FileLogAppender : public LogAppender {
@@ -384,6 +399,9 @@ public:
     /* 重新打开日志文件 */
     bool reopen();
     
+    /* 将日志文件放入链表中 */
+    void addFileToList(FileLogInfo::ptr info);
+
 private:
     /* 文件路径 */
     std::string m_filename;
@@ -393,6 +411,18 @@ private:
 
     /* 上次重新打开的时间 */
     uint64_t m_lasttime = 0;
+
+    /* 存储日志文件的链表 */
+    std::list<FileLogInfo::ptr> m_filelist;
+
+    /* 当前打开文件的文件大小 */
+    size_t m_openfilesize = 0;
+
+    /* 当前文件第一次打开的时间 */
+    std::string m_firstopentime;
+
+    /* 当前文件是否是第一次被打开 */
+    bool m_isfirstopend = true;
 };
 
 }
