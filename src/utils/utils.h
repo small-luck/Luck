@@ -23,7 +23,7 @@ uint32_t GetFiberId();
 std::string& GetThreadName();
 
 /* 获取当前时间，以20190905172700格式返回 */
-std::string& GetCurrentTime();
+std::string GetCurrentTime();
 
 }
 

@@ -2,10 +2,12 @@
 #include <iostream>
 #include <functional>
 #include <string.h>
+#include <unistd.h>
 
 namespace Luck {
 
-#define NAX_LOGFILE_SIZE    (1024*1024)
+#define MAX_LOGFILE_SIZE    (4*1024)
+#define MAX_LOGFILE_NUM     (3)
 
 const char* LogLevel::to_string(LogLevel::Level level) 
 {
@@ -138,29 +140,24 @@ void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::p
         
         m_filestream.seekp(0, m_filestream.end);
         m_openfilesize = m_filestream.tellp();
-        std::cout << "filesize = " << m_openfilesize << std::endl;
-
-        if (m_openfilesize < NAX_LOGFILE_SIZE) {
+        
+        if (m_openfilesize < MAX_LOGFILE_SIZE) {
             return;            
         }        
 
-        std::ofsream tmp_stream;
         std::string new_path;
-        FileLogInfo::ptr info(new FileLogInfo(m_filename, m_firstopentime));
         new_path = m_filename + "-" + m_firstopentime;
+        FileLogInfo::ptr info(new FileLogInfo(new_path, m_firstopentime));
 
         if (rename(m_filename.c_str(), new_path.c_str()) < 0) {
             std::cout << "rename file failed, file = " << m_filename << std::endl;
             return;
         }
-        tmp_stream = m_filestream;
 
-        reopen();
-        m_openfilesize = 0;
         m_isfirstopend = true;
+        reopen();
         
-        addFileToList(info);
-        
+        addFileToList(info);     
     }
 }
 
@@ -169,14 +166,15 @@ bool FileLogAppender::reopen()
 {    
     if (m_isfirstopend) {
         m_firstopentime = GetCurrentTime();
+        m_isfirstopend = false;
+        std::cout << "m_firstopentime = " << m_firstopentime << std::endl;
         
     }
     if (m_filestream) {
         m_filestream.close();
     }
 
-    m_filestream.open(m_filename.c_str(), std::ios::app);
-    
+    m_filestream.open(m_filename.c_str(), std::ios::app);    
 
     return true;
 }
@@ -184,7 +182,23 @@ bool FileLogAppender::reopen()
 /* 将日志文件放入链表中 */
 void FileLogAppender::addFileToList(FileLogInfo::ptr info)
 {
+    std::cout << "size = " << m_filelist.size() << std::endl;
+    if (m_filelist.size() >= MAX_LOGFILE_NUM - 1) { 
+        std::string filename = m_filelist.back()->getFilename();
+        std::cout << "filename = " << filename << std::endl;
+        if (unlink(filename.c_str()) == 0) {
+            m_filelist.pop_back();
+        }              
+    }
+    
+    for (auto it = m_filelist.begin(); it != m_filelist.end(); it++) {
+        if (info->getCreateTime().compare((*it)->getCreateTime()) > 0) {
+            m_filelist.insert(it, info);
+            return;
+        }
+    }
 
+    m_filelist.push_back(info);    
 }
 
 /* 打印日志 */
@@ -375,43 +389,6 @@ void Logger::warning(LogEvent::ptr event)
 {
     log(LogLevel::WARNING, event);
 }
-<<<<<<< HEAD
-
-/* 写error日志 */
-void Logger::error(LogEvent::ptr event)
-{
-    log(LogLevel::ERROR, event);
-}
-
-/* 写fatal日志 */
-void Logger::fatal(LogEvent::ptr event)
-{
-    log(LogLevel::FATAL, event);
-}
-
-/* 添加日志输出器 */
-void Logger::AddAppender(LogAppender::ptr appender)
-{
-    m_appenders.push_back(appender);
-}
-
-/* 删除一个日志输出器 */
-void Logger::DelAppender(LogAppender::ptr appender)
-{
-    for (auto it = m_appenders.begin(); it != m_appenders.end(); it++) {
-        if (*it == appender) {
-            m_appenders.erase(it);
-            break;
-        }
-    }
-}
-
-/* 清空日志输出器集合 */
-void Logger::ClearAppenders()
-{
-    m_appenders.clear();
-}
-
 
 /* 写error日志 */
 void Logger::error(LogEvent::ptr event)
