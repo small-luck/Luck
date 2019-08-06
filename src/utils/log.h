@@ -18,6 +18,7 @@
 #include <stdarg.h>
 #include <map>
 #include <time.h>
+#include <atomic>
 #include "utils.h"
 
 /* 使用流式方式将日志级别为level的日志写入logger中 */
@@ -374,14 +375,14 @@ class FileLogInfo {
 public:
     typedef std::shared_ptr<FileLogInfo> ptr;
 
-    FileLogInfo(std::string& filename, std::string& createtime) : m_filename(filename), m_createtime(createtime) {}
+    FileLogInfo(std::string& filename, uint32_t id) : m_filename(filename), m_id(id) {}
 
     std::string& getFilename() { return m_filename; }
-    std::string& getCreateTime() { return m_createtime; }
+    uint32_t getId() { return m_id; }
 
 private:
     std::string m_filename;
-    std::string m_createtime;
+    uint32_t    m_id;
 };
 
 
@@ -423,6 +424,10 @@ private:
 
     /* 当前文件是否是第一次被打开 */
     bool m_isfirstopend = true;
+
+    /* ID */
+    std::atomic<int> m_atomic_id;
+    
 };
 
 }

@@ -37,14 +37,9 @@ int main()
 
 
     //LUCK_LOG_FMT_DEBUG(logger, "this is test for LUCK_LOG_FMT_DEBUG: num = %d", 1000);
-    for (int i = 0; i < 40; i++) {
-        usleep(100000);
-        LUCK_LOG_ERROR(logger) << "this is test for LUCK_LOG_ERROR";
-    }
-
-    for (int j = 0; j < 100; j++) {
-        usleep(100000);
-        LUCK_LOG_FATAL(logger) << "this is test for LUCK_LOG_FATAL";
+    for (int i = 0; i < 200000; i++) {
+        //usleep(300000);
+        LUCK_LOG_FMT_ERROR(logger, "this is test for ERROR filelog, id = %d", i + 1);
     }
     
     //LUCK_LOG_FMT_ERROR(logger, "this is test for LUCK_LOG_FMT_ERROR: num = %d", 2000);

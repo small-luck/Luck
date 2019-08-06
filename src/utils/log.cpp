@@ -6,8 +6,8 @@
 
 namespace Luck {
 
-#define MAX_LOGFILE_SIZE    (4*1024)
-#define MAX_LOGFILE_NUM     (3)
+#define MAX_LOGFILE_SIZE    (100*1024)
+#define MAX_LOGFILE_NUM     (10)
 
 const char* LogLevel::to_string(LogLevel::Level level) 
 {
@@ -117,6 +117,7 @@ LogFormatter::ptr LogAppender::getFormatter()
 /* 构造函数 */
 FileLogAppender::FileLogAppender(const std::string& filename) : m_filename(filename) 
 {
+    m_atomic_id = 1;
 }
     
 /* 打印日志 */
@@ -145,10 +146,17 @@ void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::p
             return;            
         }        
 
+        std::string id_str;
+        std::stringstream ss;
+        ss << m_atomic_id;
+        ss >> id_str;
+        m_atomic_id ++;
+        
         std::string new_path;
-        new_path = m_filename + "-" + m_firstopentime;
-        FileLogInfo::ptr info(new FileLogInfo(new_path, m_firstopentime));
-
+        new_path = m_filename + "-" + m_firstopentime + "-" + id_str;
+        std::cout << "new_path = " << new_path << std::endl;
+        FileLogInfo::ptr info(new FileLogInfo(new_path, m_atomic_id));
+    
         if (rename(m_filename.c_str(), new_path.c_str()) < 0) {
             std::cout << "rename file failed, file = " << m_filename << std::endl;
             return;
@@ -182,7 +190,7 @@ bool FileLogAppender::reopen()
 /* 将日志文件放入链表中 */
 void FileLogAppender::addFileToList(FileLogInfo::ptr info)
 {
-    std::cout << "size = " << m_filelist.size() << std::endl;
+    std::cout << "before: size = " << m_filelist.size() << std::endl;
     if (m_filelist.size() >= MAX_LOGFILE_NUM - 1) { 
         std::string filename = m_filelist.back()->getFilename();
         std::cout << "filename = " << filename << std::endl;
@@ -190,15 +198,20 @@ void FileLogAppender::addFileToList(FileLogInfo::ptr info)
             m_filelist.pop_back();
         }              
     }
-    
+
     for (auto it = m_filelist.begin(); it != m_filelist.end(); it++) {
-        if (info->getCreateTime().compare((*it)->getCreateTime()) > 0) {
+        std::cout << "info->getId() = " << info->getId() <<std::endl;
+        std::cout << "(*it)->getId() = " << (*it)->getId() <<std::endl;
+        if (info->getId() > (*it)->getId()) {
             m_filelist.insert(it, info);
+            std::cout << "after1: size = " << m_filelist.size() << std::endl;
             return;
         }
     }
 
-    m_filelist.push_back(info);    
+    m_filelist.push_back(info);  
+    std::cout << "after2: size = " << m_filelist.size() << std::endl;
+    
 }
 
 /* 打印日志 */
