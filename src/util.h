@@ -1,11 +1,11 @@
 /*
-    @file   utils.h
+    @file   util.h
     @brief  工具模块封装  
-    @author perry.liu
+    @author liupei
     @date   2019-08-02
 */
-#ifndef __LUCK_UTILS_H__
-#define __LUCK_UTILS_H__
+#ifndef __LUCK_UTIL_H__
+#define __LUCK_UTIL_H__
 
 #include <stdint.h>
 #include <string>

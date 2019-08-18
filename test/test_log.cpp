@@ -2,8 +2,8 @@
 #include <time.h>
 #include <stdint.h>
 #include <unistd.h>
-#include "../src/utils/log.h"
-#include "../src/utils/utils.h"
+#include "../src/log.h"
+#include "../src/util.h"
 
 
 using namespace Luck;
