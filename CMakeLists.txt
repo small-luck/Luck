@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O0 -ggdb -std=c++11 -Wall -Wno-de
 
 set(LIB_SRC
     src/log.cpp
-    src/utils.cpp
+    src/util.cpp
     src/config.cpp
     )
 
@@ -17,7 +17,7 @@ add_executable(test_log test/test_log.cpp)
 add_dependencies(test_log Luck)
 target_link_libraries(test_log Luck)
 
-add_executable(test_config test/test_log.cpp)
+add_executable(test_config test/test_config.cpp)
 add_dependencies(test_config Luck)
 target_link_libraries(test_config Luck)
 

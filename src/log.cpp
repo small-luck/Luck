@@ -6,7 +6,7 @@
 
 namespace Luck {
 
-#define MAX_LOGFILE_SIZE    (100*1024)
+#define MAX_LOGFILE_SIZE    (1024*1024)
 #define MAX_LOGFILE_NUM     (10)
 
 const char* LogLevel::to_string(LogLevel::Level level) 
@@ -154,7 +154,6 @@ void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::p
         
         std::string new_path;
         new_path = m_filename + "-" + m_firstopentime + "-" + id_str;
-        std::cout << "new_path = " << new_path << std::endl;
         FileLogInfo::ptr info(new FileLogInfo(new_path, m_atomic_id));
     
         if (rename(m_filename.c_str(), new_path.c_str()) < 0) {
@@ -163,8 +162,7 @@ void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::p
         }
 
         m_isfirstopend = true;
-        reopen();
-        
+        reopen();        
         addFileToList(info);     
     }
 }
@@ -174,10 +172,9 @@ bool FileLogAppender::reopen()
 {    
     if (m_isfirstopend) {
         m_firstopentime = GetCurrentTime();
-        m_isfirstopend = false;
-        std::cout << "m_firstopentime = " << m_firstopentime << std::endl;
-        
+        m_isfirstopend = false;        
     }
+    
     if (m_filestream) {
         m_filestream.close();
     }
@@ -190,28 +187,21 @@ bool FileLogAppender::reopen()
 /* 将日志文件放入链表中 */
 void FileLogAppender::addFileToList(FileLogInfo::ptr info)
 {
-    std::cout << "before: size = " << m_filelist.size() << std::endl;
     if (m_filelist.size() >= MAX_LOGFILE_NUM - 1) { 
         std::string filename = m_filelist.back()->getFilename();
-        std::cout << "filename = " << filename << std::endl;
         if (unlink(filename.c_str()) == 0) {
             m_filelist.pop_back();
         }              
     }
 
     for (auto it = m_filelist.begin(); it != m_filelist.end(); it++) {
-        std::cout << "info->getId() = " << info->getId() <<std::endl;
-        std::cout << "(*it)->getId() = " << (*it)->getId() <<std::endl;
         if (info->getId() > (*it)->getId()) {
             m_filelist.insert(it, info);
-            std::cout << "after1: size = " << m_filelist.size() << std::endl;
             return;
         }
     }
 
-    m_filelist.push_back(info);  
-    std::cout << "after2: size = " << m_filelist.size() << std::endl;
-    
+    m_filelist.push_back(info);      
 }
 
 /* 打印日志 */
@@ -445,7 +435,30 @@ void Logger::setFormatter(const std::string& format)
     m_formatter = new_val;
 }
 
+/* 构造函数 */
+LoggerManager::LoggerManager()
+{
+    m_root.reset(new Logger);
+    m_root->AddAppender(LogAppender::ptr(new StdoutLogAppender));
+}
 
+/* 获取日志器 */
+Logger::ptr LoggerManager::getLogger(const std::string& name) 
+{
+    auto it = m_loggers.find(name);
+    if (it != m_loggers.end())
+        return it->second; 
+    
+    return m_root;   
+}
+
+/* 初始化 */
+void LoggerManager::init()
+{
+
+}
+
+/* 构造函数 */
 LogFormatter::LogFormatter(const std::string& pattern) : m_pattern(pattern)
 {
     init();

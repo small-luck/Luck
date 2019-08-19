@@ -2,5 +2,6 @@
 
 namespace Luck {
 
+Config::ConfigVarMap Config::s_datas;
 
 }

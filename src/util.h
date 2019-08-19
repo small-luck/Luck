@@ -1,7 +1,7 @@
 /*
-    @file   util.h
+    @file   utils.h
     @brief  工具模块封装  
-    @author liupei
+    @author perry.liu
     @date   2019-08-02
 */
 #ifndef __LUCK_UTIL_H__

@@ -20,6 +20,7 @@
 #include <time.h>
 #include <atomic>
 #include "util.h"
+#include "singleton.h"
 
 /* 使用流式方式将日志级别为level的日志写入logger中 */
 #define LUCK_LOG_PRINT(logger, level) \
@@ -65,7 +66,7 @@
 /* 使用格式化方式将FATAL日志写入Logger中 */
 #define LUCK_LOG_FMT_FATAL(logger, fmt, ...)        LUCK_LOG_FMT_PRINT(logger, Luck::LogLevel::FATAL, fmt, ##__VA_ARGS__);
 
-
+#define LUCK_LOG_ROOT() Luck::LoggerMgr::GetInstance()->getRoot()
 
 namespace Luck{
 
@@ -429,6 +430,31 @@ private:
     std::atomic<int> m_atomic_id;
     
 };
+
+/* 日志器管理类 */
+class LoggerManager {
+public:
+    /* 构造函数 */
+    LoggerManager();
+
+    /* 获取日志器 */
+    Logger::ptr getLogger(const std::string& name);
+
+    /* 初始化 */
+    void init();
+
+    /* 返回主日志器 */
+    Logger::ptr getRoot() { return m_root; }
+
+private:
+    /* 日志器容器 */
+    std::map<std::string, Logger::ptr> m_loggers;
+
+    /* 主日志器，缺省 */
+    Logger::ptr m_root;
+};
+
+typedef Luck::Singleton<LoggerManager> LoggerMgr;
 
 }
 #endif /*__LUCK_LOG_H__*/

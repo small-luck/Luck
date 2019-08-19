@@ -11,6 +11,7 @@
 #include <memory>
 #include <boost/lexical_cast.hpp>
 #include <map>
+#include "log.h"
 
 namespace Luck {
 
@@ -56,7 +57,7 @@ public:
     typedef std::shared_ptr<ConfigVar> ptr;
 
     /* 构造函数 */
-    ConfigVar(const std::string& name, const std::string& default_value, const std::string& description = "")
+    ConfigVar(const std::string& name, const T& default_value, const std::string& description = "")
         : ConfigVarBase(name, description)
         , m_value(default_value) {
     }
@@ -66,7 +67,8 @@ public:
         try {
             return boost::lexical_cast<std::string>(m_value);
         }catch (std::exception& e) {
-            std::cout << "toString error" << std::endl;
+            LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "ConfigVar::toString exception"
+                << e.what() << "convert: " << typeid(m_value).name() << "to string";
         }
 
         return "";
@@ -78,7 +80,8 @@ public:
             m_value = boost::lexical_cast<T>(val);
             return true;
         } catch (std::exception& e) {
-            std::cout << "fromString error" << std::endl;
+            LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "ConfigVar::fromString exception"
+                << e.what() << "convert:string to " << typeid(m_value).name();
         }
 
         return false;
@@ -103,19 +106,22 @@ public:
     
     /* 创建一个参数 */ 
     template<class T>
-    typename ConfigVar<T>::ptr LookUp(const std::string& name, const std::string& default_value, const std::string& description = "") {
+    static typename ConfigVar<T>::ptr LookUp(const std::string& name, const T& default_value, const std::string& description = "") {
         //先判断map中是否存在
         auto it = s_datas.find(name);
         if (it != s_datas.end()) {
             //转换，判断是否合法
             auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
             if (tmp) {
-                std::cout << "LookUp name: " << name << " exists" << std::endl;
+                LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "LookUp name = " << name << " exists";
                 return tmp;
-            } else {
-                std::cout << "LookUp name: " << name << " exists but type is invalid" << std::endl;
-                return nullptr;
             }
+        }
+
+        //如果不存在，先判断参数的名称是否合法
+        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") != std::string::npos) {
+            LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "LookUp name invalid" << name;
+            throw std::invalid_argument(name);
         }
 
         //如果没有找到，创建一个放入map中
@@ -126,7 +132,7 @@ public:
 
     /* 根据参数名称查找这个参数在map中是否存在 */
     template<class T>
-    typename ConfigVar<T>::ptr LookUp(const std::string& name) {
+    static typename ConfigVar<T>::ptr LookUp(const std::string& name) {
         auto it = s_datas.find(name);
         return (it == s_datas.end() ? std::dynamic_pointer_cast<ConfigVar<T>>(it->second) : nullptr);
     }
@@ -134,7 +140,7 @@ public:
 
 private:
     /* 存储配置参数容器 */
-    ConfigVarMap s_datas;
+    static ConfigVarMap s_datas;
 };
 
 }
