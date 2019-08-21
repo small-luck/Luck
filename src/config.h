@@ -51,9 +51,22 @@ protected:
     std::string m_description;
 };
 
+/* 基本类型的转换 */
+template<class F, class T>
+class LexicalCast {
+public:
+    T operator()(const F& v) {
+        return boost::lexical_cast<T>(v);
+    }
+};
+
+/* 支持vector转换 */
+
 /* 配置参数的派生类 */
 //是个模板类，因为参数值的类型可能是各种基本类型或者stl，或者自定义类型
-template<class T>
+//Fromstr: T operastor()(const F&)
+//Tostr: F operator()(const T&)
+template<class T, class Fromstr = LexicalCast<std::string, T>, class Tostr = LexicalCast<T, std::string>>
 class ConfigVar : public ConfigVarBase {
 public:
     /* 定义智能指针 */
@@ -68,7 +81,8 @@ public:
     /* 将配置参数转为string,使用boost库中的lexical_cast*/
     std::string toString() override {
         try {
-            return boost::lexical_cast<std::string>(m_value);
+            //return boost::lexical_cast<std::string>(m_value);
+            return Tostr()(m_value);
         }catch (std::exception& e) {
             LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "ConfigVar::toString exception"
                 << e.what() << "convert: " << typeid(m_value).name() << "to string";
@@ -80,7 +94,8 @@ public:
     /* 将string转为配置参数的值 */
     bool fromString(const std::string& val) override {
         try {
-            m_value = boost::lexical_cast<T>(val);
+            //m_value = boost::lexical_cast<T>(val);
+            setValue(Fromstr()(val));
             return true;
         } catch (std::exception& e) {
             LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "ConfigVar::fromString exception"
