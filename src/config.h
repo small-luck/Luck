@@ -11,6 +11,7 @@
 #include <memory>
 #include <boost/lexical_cast.hpp>
 #include <map>
+#include <yaml-cpp/yaml.h>
 #include "log.h"
 
 namespace Luck {
@@ -23,8 +24,10 @@ public:
 
     /* 构造函数，初始化成员变量 */
     ConfigVarBase(const std::string& name, const std::string& description = "")
-        : m_name(name)
-        , m_description(description) {}
+        : m_name(name) //强制转换为小写
+        , m_description(description) {
+            std::transform(m_name.begin(), m_name.end(), m_name.begin(), ::tolower);
+        }
     
     /* 析构函数 */
     virtual ~ConfigVarBase() {}
@@ -136,8 +139,12 @@ public:
         auto it = s_datas.find(name);
         return (it == s_datas.end() ? std::dynamic_pointer_cast<ConfigVar<T>>(it->second) : nullptr);
     }
-
-
+    
+    /* 将yaml文件内容放入配置参数容器中 */
+    static void LoadFromYaml(const YAML::Node& node);
+    
+    /* 根据名称在参数容器中查找是否存在对应的ptr */
+    static ConfigVarBase::ptr LookUpBase(const std::string& name);
 private:
     /* 存储配置参数容器 */
     static ConfigVarMap s_datas;
