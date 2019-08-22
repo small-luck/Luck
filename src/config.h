@@ -11,6 +11,11 @@
 #include <memory>
 #include <boost/lexical_cast.hpp>
 #include <map>
+#include <vector>
+#include <list>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <yaml-cpp/yaml.h>
 #include "log.h"
 
@@ -60,7 +65,203 @@ public:
     }
 };
 
-/* 支持vector转换 */
+/* 支持vector转换,做偏特化, 将string转为vector */
+template<class T>
+class LexicalCast<std::string, std::vector<T>> {
+public:
+    std::vector<T> operator()(const std::string& val) {
+        YAML::Node node = YAML::Load(val);
+        std::vector<T> vec;
+        std::stringstream ss;
+        for (size_t i = 0; i < node.size(); i++) {
+            ss.str("");
+            ss << node[i];
+            vec.push_back(LexicalCast<std::string, T>()(ss.str()));
+        }
+
+        return vec;
+    }
+};
+
+/* 支持将vector<T>转换为string */
+template<class T>
+class LexicalCast<std::vector<T>, std::string> {
+public:
+    std::string operator()(const std::vector<T>& v) {
+        YAML::Node node(YAML::NodeType::Sequence);
+        for (auto& i : v) {
+            node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+        }
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
+
+/* 支持从string-->std::list<T> 转换*/
+template<class T>
+class LexicalCast<std::string, std::list<T>> {
+public:
+    std::list<T> operator()(const std::string& str) {
+        YAML::Node node = YAML::Load(str);
+        std::list<T> lst;
+        std::stringstream ss;
+        for (size_t i = 0; i < node.size(); i++) {
+            ss.str("");
+            ss << node[i];
+            lst.push_back(LexicalCast<T, std::string>()(ss.str()));
+        }
+
+        return lst;
+    }
+};
+
+/* 支持从std::list<t>-->std::string转换 */
+template<class T>
+class LexicalCast<std::list<T>, std::string> {
+public:
+    std::string operator()(const std::list<T>& lst) {
+        YAML::Node node(YAML::NodeType::Sequence);
+        for (auto& i : lst) {
+            node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+        }
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
+
+/* 支持从std::string-->std::map<T>转换  */
+template<class T>
+class LexicalCast<std::string, std::map<std::string, T>> {
+public:
+    std::map<std::string, T> operator()(const std::string& str) {
+        YAML::Node node = YAML::Load(str);
+        std::stringstream ss;
+        std::map<std::string, T> v;
+        for (auto it = node.begin(); it != node.end(); it++) {
+            ss.str("");
+            ss << it->second;
+            v.insert(std::make_pair(it->first.Scalar(), LexicalCast<std::string, T>()(ss.str())));
+        }
+        return v;
+    }
+};
+
+/* 支持从std::map<T>-->std::string转换 */
+template<class T>
+class LexicalCast<std::map<std::string, T>, std::string> {
+public:
+    std::string operator()(const std::map<std::string, T>& v) {
+        YAML::Node node(YAML::NodeType::Map);
+        for (auto& i : v) {
+            node[i.first] = LexicalCast<std::string, T>()(i.second);
+        }
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
+
+
+/* 支持从std::string-->std::unordered_map<T>转换  */
+template<class T>
+class LexicalCast<std::string, std::unordered_map<std::string, T>> {
+public:
+    std::unordered_map<std::string, T> operator()(const std::string& str) {
+        YAML::Node node = YAML::Load(str);
+        std::stringstream ss;
+        std::unordered_map<std::string, T> v;
+        for (auto it = node.begin(); it != node.end(); it++) {
+            ss.str("");
+            ss << it->second;
+            v.insert(std::make_pair(it->first.Scalar(), LexicalCast<std::string, T>()(ss.str())));
+        }
+        return v;
+    }
+};
+
+
+/* 支持从std::unordered_map<T>-->std::string转换  */
+template<class T>
+class LexicalCast<std::unordered_map<std::string, T>, std::string> {
+public:
+    std::string operator()(const std::unordered_map<std::string, T>& v) {
+        YAML::Node node(YAML::NodeType::Map);
+        for (auto& i : v) {
+            node[i.first] = LexicalCast<std::string, T>()(i.second);
+        }
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
+
+
+/* 支持从std::string-->std::set<T>转换  */
+template<class T>
+class LexicalCast<std::string, std::set<T>> {
+public:
+    std::set<T> operator()(const std::string& str) {
+        YAML::Node node = YAML::Load(str);
+        std::stringstream ss;
+        std::set<T> v;
+        for (size_t i = 0; i < node.size(); i++) {
+            ss.str("");
+            ss << node[i];
+            v.insert(LexicalCast<std::string, T>()(ss.str()));
+        }
+
+        return v;
+    }
+};
+
+/* 支持从std::set<T>-->std::string转换  */
+template<class T>
+class LexicalCast<std::set<T>, std::string> {
+public:
+    std::string operator()(const std::set<T>& v) {
+        YAML::Node node(YAML::NodeType::Sequence);
+        for (auto& i : v) {
+            node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+        }
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
+
+/* 支持从std::string-->std::unordered_set转换  */
+template<class T>
+class LexicalCast<std::string, std::unordered_set<T>> {
+public:
+    std::unordered_set<T> operator()(const std::string& str) {
+        YAML::Node node = YAML::Load(str);
+        std::stringstream ss;
+        std::unordered_set<T> v;
+        for (size_t i = 0; i < node.size(); i++) {
+            ss.str("");
+            ss << node[i];
+            v.insert(LexicalCast<std::string, T>()(ss.str()));
+        } 
+        return v;
+    }
+};
+
+/* 支持从std::unordered_set<T>-->std::string转换  */
+template<class T>
+class LexicalCast<std::unordered_set<T>, std::string> {
+public:
+    std::string operator()(const std::unordered_set<T>& v) {
+        YAML::Node node(YAML::NodeType::Sequence);
+        for (auto& i : v) {
+            node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+        }
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
 
 /* 配置参数的派生类 */
 //是个模板类，因为参数值的类型可能是各种基本类型或者stl，或者自定义类型

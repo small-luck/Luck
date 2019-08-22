@@ -17,4 +17,4 @@ log:
 system:
     port: 9000
     value: 88.88
-
+    int_vec: [10,20]
