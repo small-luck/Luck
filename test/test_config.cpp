@@ -53,13 +53,27 @@ void test_config()
     { \
         auto& v = g_var->getValue(); \
         for (auto& i : v) { \
-            LUCK_LOG_INFO(LUCK_LOG_ROOT()) << #prefix " " #name << i; \
+            LUCK_LOG_INFO(LUCK_LOG_ROOT()) << #prefix " " #name << " " << i; \
+        } \
+        LUCK_LOG_INFO(LUCK_LOG_ROOT()) << #prefix " " #name "yaml: " << g_var->toString(); \
+    }
+
+#define XX_M(g_var, name, prefix) \
+    { \
+        auto& v = g_var->getValue(); \
+        for (auto& i : v) { \
+            LUCK_LOG_INFO(LUCK_LOG_ROOT()) << #prefix " " #name << " :{" << \
+                i.first << ":" << i.second << "}"; \
         } \
         LUCK_LOG_INFO(LUCK_LOG_ROOT()) << #prefix " " #name "yaml: " << g_var->toString(); \
     }
 
     XX(g_int_vec_value_config, int_vec, before);
     XX(g_int_list_value_config, int_list, before);
+    XX(g_int_set_value_config, int_set, before);
+    XX(g_int_uset_value_config, int_uset, before);
+    XX_M(g_str_int_map_value_config, g_str_int_map, before);
+    XX_M(g_str_int_umap_value_config, g_str_int_umap, before);
 
     YAML::Node root = YAML::LoadFile("/mnt/study/Luck/doc/conf/log.yml");
     Luck::Config::LoadFromYaml(root);
@@ -69,6 +83,10 @@ void test_config()
 
     XX(g_int_vec_value_config, int_vec, after);
     XX(g_int_list_value_config, int_list, after);
+    XX(g_int_set_value_config, int_set, after);
+    XX(g_int_uset_value_config, int_uset, after);
+    XX_M(g_str_int_map_value_config, g_str_int_map, after);
+    XX_M(g_str_int_umap_value_config, g_str_int_umap, after);
 }
 
 int main(int argc, const char* argv[])

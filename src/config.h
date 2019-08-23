@@ -109,7 +109,7 @@ public:
         for (size_t i = 0; i < node.size(); i++) {
             ss.str("");
             ss << node[i];
-            lst.push_back(LexicalCast<T, std::string>()(ss.str()));
+            lst.push_back(LexicalCast<std::string, T>()(ss.str()));
         }
 
         return lst;
@@ -155,7 +155,7 @@ public:
     std::string operator()(const std::map<std::string, T>& v) {
         YAML::Node node(YAML::NodeType::Map);
         for (auto& i : v) {
-            node[i.first] = LexicalCast<std::string, T>()(i.second);
+            node[i.first] = YAML::Load(LexicalCast<T, std::string>()(i.second));
         }
         std::stringstream ss;
         ss << node;
@@ -189,7 +189,7 @@ public:
     std::string operator()(const std::unordered_map<std::string, T>& v) {
         YAML::Node node(YAML::NodeType::Map);
         for (auto& i : v) {
-            node[i.first] = LexicalCast<std::string, T>()(i.second);
+            node[i.first] = YAML::Load(LexicalCast<T, std::string>()(i.second));
         }
         std::stringstream ss;
         ss << node;
@@ -268,6 +268,7 @@ public:
 //Fromstr: T operastor()(const F&)
 //Tostr: F operator()(const T&)
 template<class T, class Fromstr = LexicalCast<std::string, T>, class Tostr = LexicalCast<T, std::string>>
+
 class ConfigVar : public ConfigVarBase {
 public:
     /* 定义智能指针 */

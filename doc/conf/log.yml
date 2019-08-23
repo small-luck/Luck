@@ -18,3 +18,14 @@ system:
     port: 9000
     value: 88.88
     int_vec: [10,20]
+    int_list: 
+        - 30
+        - 40
+    int_set: [50, 60]
+    str_int_map: 
+        k: 70
+        k2: 80
+    int_uset: [90, 100]
+    str_int_umap:
+        k: 110
+        k3: 120
