@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <yaml-cpp/yaml.h>
+#include <functional>
 #include "log.h"
 
 namespace Luck {
@@ -33,13 +34,13 @@ public:
         , m_description(description) {
             std::transform(m_name.begin(), m_name.end(), m_name.begin(), ::tolower);
         }
-    
+
     /* 析构函数 */
     virtual ~ConfigVarBase() {}
 
     /* 获取参数名称 */
     const std::string& getName() const { return m_name; }
-    
+
     /* 获取参数描述 */
     const std::string& getDescription() const { return m_description;  }
 
@@ -274,11 +275,14 @@ public:
     /* 定义智能指针 */
     typedef std::shared_ptr<ConfigVar> ptr;
 
+    /* 定义配置变更回调函数 */
+    typedef std::function<void(const T& old_value, const T& new_value)> on_change_cb;
+
     /* 构造函数 */
     ConfigVar(const std::string& name, const T& default_value, const std::string& description = "")
         : ConfigVarBase(name, description)
         , m_value(default_value) {
-    }
+        }
 
     /* 将配置参数转为string,使用boost库中的lexical_cast*/
     std::string toString() override {
@@ -308,14 +312,47 @@ public:
     }
 
     /* 设置参数的值 */
-    void setValue(const T& value) { m_value = value; }
+    void setValue(const T& value) {
+        if (m_value == value)
+            return;
+
+        for (auto& i : m_cbs) {
+            i.second(m_value, value);
+        }
+
+        m_value = value;
+    }
 
     /* 获取value的值 */
     const T& getValue() const { return m_value; }
 
+    /* 添加回调函数 */
+    void addListener(uint64_t key, on_change_cb cb) {
+        m_cbs[key] = cb;
+    }
+
+    /* 删除回调函数 */
+    void deleteListener(uint64_t key) {
+        m_cbs.erase(key);
+    }
+
+    /* 获取回调函数 */
+    on_change_cb getListener(uint64_t key) {
+        auto it = m_cbs.find(key);
+        return it == m_cbs.end() ? nullptr : it->second;
+    }
+
+    /* 清除所有回调函数 */
+    void clearListener() {
+        m_cbs.clear();
+    }
+
 private:
     /* 配置参数的值 */
     T m_value;
+
+    /* 定义配置变更回调函数数组 */
+    std::map<uint64_t, on_change_cb> m_cbs;
 };
 
 /* 配置管理器 */
@@ -323,43 +360,43 @@ class Config {
 public:
     /* 设置一个类型来存储配置参数 */
     typedef std::map<std::string, ConfigVarBase::ptr> ConfigVarMap;
-    
+
     /* 创建一个参数 */ 
     template<class T>
-    static typename ConfigVar<T>::ptr LookUp(const std::string& name, const T& default_value, const std::string& description = "") {
-        //先判断map中是否存在
-        auto it = s_datas.find(name);
-        if (it != s_datas.end()) {
-            //转换，判断是否合法
-            auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
-            if (tmp) {
-                LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "LookUp name = " << name << " exists";
-                return tmp;
+        static typename ConfigVar<T>::ptr LookUp(const std::string& name, const T& default_value, const std::string& description = "") {
+            //先判断map中是否存在
+            auto it = s_datas.find(name);
+            if (it != s_datas.end()) {
+                //转换，判断是否合法
+                auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+                if (tmp) {
+                    LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "LookUp name = " << name << " exists";
+                    return tmp;
+                }
             }
-        }
 
-        //如果不存在，先判断参数的名称是否合法
-        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") != std::string::npos) {
-            LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "LookUp name invalid" << name;
-            throw std::invalid_argument(name);
-        }
+            //如果不存在，先判断参数的名称是否合法
+            if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") != std::string::npos) {
+                LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "LookUp name invalid" << name;
+                throw std::invalid_argument(name);
+            }
 
-        //如果没有找到，创建一个放入map中
-        typename ConfigVar<T>::ptr value(new ConfigVar<T>(name, default_value, description));
-        s_datas[name] = value;
-        return value;
-    }
+            //如果没有找到，创建一个放入map中
+            typename ConfigVar<T>::ptr value(new ConfigVar<T>(name, default_value, description));
+            s_datas[name] = value;
+            return value;
+        }
 
     /* 根据参数名称查找这个参数在map中是否存在 */
     template<class T>
-    static typename ConfigVar<T>::ptr LookUp(const std::string& name) {
-        auto it = s_datas.find(name);
-        return (it == s_datas.end() ? std::dynamic_pointer_cast<ConfigVar<T>>(it->second) : nullptr);
-    }
-    
+        static typename ConfigVar<T>::ptr LookUp(const std::string& name) {
+            auto it = s_datas.find(name);
+            return (it == s_datas.end() ? std::dynamic_pointer_cast<ConfigVar<T>>(it->second) : nullptr);
+        }
+
     /* 将yaml文件内容放入配置参数容器中 */
     static void LoadFromYaml(const YAML::Node& node);
-    
+
     /* 根据名称在参数容器中查找是否存在对应的ptr */
     static ConfigVarBase::ptr LookUpBase(const std::string& name);
 private:
