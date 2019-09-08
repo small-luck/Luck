@@ -49,6 +49,9 @@ public:
 
     /* 将string转为配置参数的值 */
     virtual bool fromString(const std::string& val) = 0;
+    
+    /* 获取值的类型 */
+    virtual std::string getTypeName() const = 0;
 protected:
     /* 配置参数名称 */
     std::string m_name;
@@ -276,7 +279,7 @@ public:
     typedef std::shared_ptr<ConfigVar> ptr;
 
     /* 定义配置变更回调函数 */
-    typedef std::function<void(const T& old_value, const T& new_value)> on_change_cb;
+    typedef std::function<void (const T& old_value, const T& new_value)> on_change_cb;
 
     /* 构造函数 */
     ConfigVar(const std::string& name, const T& default_value, const std::string& description = "")
@@ -305,7 +308,7 @@ public:
             return true;
         } catch (std::exception& e) {
             LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "ConfigVar::fromString exception"
-                << e.what() << "convert:string to " << typeid(m_value).name();
+                << e.what() << " convert:string to " << typeid(m_value).name();
         }
 
         return false;
@@ -325,6 +328,9 @@ public:
 
     /* 获取value的值 */
     const T& getValue() const { return m_value; }
+
+    /* 获取value的值的类型 */
+    std::string getTypeName() const { return typeid(T).name(); }
 
     /* 添加回调函数 */
     void addListener(uint64_t key, on_change_cb cb) {
@@ -363,29 +369,29 @@ public:
 
     /* 创建一个参数 */ 
     template<class T>
-        static typename ConfigVar<T>::ptr LookUp(const std::string& name, const T& default_value, const std::string& description = "") {
-            //先判断map中是否存在
-            auto it = s_datas.find(name);
-            if (it != s_datas.end()) {
-                //转换，判断是否合法
-                auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
-                if (tmp) {
-                    LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "LookUp name = " << name << " exists";
-                    return tmp;
-                }
+    static typename ConfigVar<T>::ptr LookUp(const std::string& name, const T& default_value, const std::string& description = "") {
+        //先判断map中是否存在
+        auto it = s_datas.find(name);
+        if (it != s_datas.end()) {
+            //转换，判断是否合法
+            auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+            if (tmp) {
+                LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "LookUp name = " << name << " exists";
+                return tmp;
             }
-
-            //如果不存在，先判断参数的名称是否合法
-            if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") != std::string::npos) {
-                LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "LookUp name invalid" << name;
-                throw std::invalid_argument(name);
-            }
-
-            //如果没有找到，创建一个放入map中
-            typename ConfigVar<T>::ptr value(new ConfigVar<T>(name, default_value, description));
-            s_datas[name] = value;
-            return value;
         }
+
+        //如果不存在，先判断参数的名称是否合法
+        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") != std::string::npos) {
+            LUCK_LOG_ERROR(LUCK_LOG_ROOT()) << "LookUp name invalid" << name;
+            throw std::invalid_argument(name);
+        }
+
+        //如果没有找到，创建一个放入map中
+        typename ConfigVar<T>::ptr value(new ConfigVar<T>(name, default_value, description));
+        s_datas[name] = value;
+        return value;
+    }
 
     /* 根据参数名称查找这个参数在map中是否存在 */
     template<class T>

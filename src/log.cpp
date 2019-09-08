@@ -3,6 +3,7 @@
 #include <functional>
 #include <string.h>
 #include <unistd.h>
+#include "config.h"
 
 namespace Luck {
 
@@ -440,6 +441,8 @@ LoggerManager::LoggerManager()
 {
     m_root.reset(new Logger);
     m_root->AddAppender(LogAppender::ptr(new StdoutLogAppender));
+
+    init();
 }
 
 /* 获取日志器 */
@@ -449,8 +452,46 @@ Logger::ptr LoggerManager::getLogger(const std::string& name)
     if (it != m_loggers.end())
         return it->second; 
     
-    return m_root;   
+    Logger::ptr logger(new Logger(name));
+    logger->m_root = m_root;
+    m_loggers[name] = logger;
+
+    return logger;
 }
+
+/* 定义log.yml文件中appender结构体 */
+struct LogAppenderDefine {
+    int type = 0; //1: file, 2:Stdout
+    LogLevel::Level level = LogLevel::UNKNOW;    //级别
+    std::string formatter;  //格式
+    std::string file;   //文件的绝对路径
+
+    /* == 符号重载 */
+    bool operator==(const LogAppenderDefine& other) const {
+        return type == other.type
+            && level == other.level
+            && formatter == other.formatter
+            && file == other.file;
+    }
+};
+
+/* 定义kog.yml文件中logger结构体 */
+struct LoggerDefine {
+    std::string name;   //名称
+    LogLevel::Level level = LogLevel::UNKNOW;    //级别
+    std::string formatter;  //格式
+    std::vector<LogAppenderDefine> appenders;   //目的地a
+
+    /* ==符号重载 */
+    bool operator==(const LoggerDefine& other) const  {
+        return name == other.name
+            && level == other.level
+            && formatter == other.formatter
+            && appenders == other.appenders;
+    }
+};
+
+ConfigVar<>
 
 /* 初始化 */
 void LoggerManager::init()

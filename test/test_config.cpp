@@ -75,7 +75,9 @@ void test_config()
     XX_M(g_str_int_map_value_config, g_str_int_map, before);
     XX_M(g_str_int_umap_value_config, g_str_int_umap, before);
 
-    YAML::Node root = YAML::LoadFile("/mnt/study/Luck/doc/conf/log.yml");
+
+    /* YAML::Node root = YAML::LoadFile("/mnt/study/Luck/doc/conf/log.yml"); */
+    YAML::Node root = YAML::LoadFile("/mnt/hgfs/share/Luck/doc/conf/log.yml");
     Luck::Config::LoadFromYaml(root);
 
     LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "after: " << g_int_value_config->toString();
@@ -89,11 +91,85 @@ void test_config()
     XX_M(g_str_int_umap_value_config, g_str_int_umap, after);
 }
 
+class Person {
+public:
+    std::string m_name;
+    int m_age = 0;
+    bool m_sex = false;
+    
+    std::string toString() const {
+        std::stringstream ss;
+        ss << "[person name = " << m_name
+            << "age = " << m_age
+            << "sex = " << m_sex
+            << "]";
+
+        return ss.str();
+    }
+
+    bool operator== (const Person& other) const  {
+        return m_name == other.m_name 
+            && m_sex == other.m_sex
+            && m_age == other.m_age;
+    }
+};
+
+
+namespace Luck {
+
+/* 支持vector转换,做偏特化, 将string转为vector */
+template<>
+class LexicalCast<std::string, Person> {
+public:
+    Person operator()(const std::string& val) {
+        YAML::Node node = YAML::Load(val);
+        Person p;
+        p.m_name = node["name"].as<std::string>();
+        p.m_age = node["age"].as<int>();
+        p.m_sex = node["sex"].as<bool>();
+        return p;
+    }
+};
+
+/* 支持将vector<T>转换为string */
+template<>
+class LexicalCast<Person, std::string> {
+public:
+    std::string operator()(const Person& p) {
+        YAML::Node node;
+        node["name"] = p.m_name;
+        node["age"] = p.m_age;
+        node["sex"] = p.m_sex;
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+};
+
+}
+
+Luck::ConfigVar<Person>::ptr g_person = Luck::Config::LookUp("class.person", Person(), "class person");
+
+void test_class() {
+    g_person->addListener(10, [](const Person& old_value, const Person& new_value){
+        LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "old_value = " << old_value.toString()
+                << " - " << "new_value = " << new_value.toString();
+    });
+
+    LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "before" << g_person->getValue().toString() << "-" << g_person->toString();
+    
+    YAML::Node root = YAML::LoadFile("/mnt/hgfs/share/Luck/doc/conf/log.yml");
+    Luck::Config::LoadFromYaml(root);
+
+    LUCK_LOG_INFO(LUCK_LOG_ROOT()) << "after" << g_person->getValue().toString() << "-" << g_person->toString();
+}
+
 int main(int argc, const char* argv[])
 {
     // test_1();    
     //test_yaml();
-    test_config();
+    //test_config();
+    test_class();
     return 0;
 }
 

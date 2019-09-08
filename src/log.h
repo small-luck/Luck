@@ -67,10 +67,12 @@
 #define LUCK_LOG_FMT_FATAL(logger, fmt, ...)        LUCK_LOG_FMT_PRINT(logger, Luck::LogLevel::FATAL, fmt, ##__VA_ARGS__);
 
 #define LUCK_LOG_ROOT() Luck::LoggerMgr::GetInstance()->getRoot()
+#define LUCK_LOG_NAME(name) Luck::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace Luck{
 
 class Logger;
+class LoggerManager;
 
 /*日志级别*/
 class LogLevel {
@@ -294,6 +296,7 @@ protected:
     继承std::enable_shared_from_this<Logger>，
 */
 class Logger : public std::enable_shared_from_this<Logger> {
+friend class LoggerManager;
 public:
     typedef std::shared_ptr<Logger> ptr;
 
